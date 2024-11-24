@@ -55,13 +55,12 @@ async function login(req, res, next) {
         });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: error });
     }
 }
 
 async function logout(req, res, next) {
     try {
-        // Client should clear the stored tokens
         res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.log(error);
