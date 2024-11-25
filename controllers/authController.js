@@ -36,26 +36,28 @@ async function login(req, res, next) {
         const isPasswordCorrect = await bcrypt.compare(password, user.password_hash);
         if (!isPasswordCorrect) return res.status(401).json({ error: 'Email or password is incorrect' });
 
-        const accessToken = jsonwebtoken.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: '15m' }
-        );
-
         const refreshToken = jsonwebtoken.sign(
             { id: user.id, email: user.email },
             process.env.JWT_REFRESH_SECRET_KEY,
-            { expiresIn: '7d' }
+            { expiresIn: '1d' }
         );
+
+        const accessToken = jsonwebtoken.sign(
+            { id: user.id, email: user.email },
+             process.env.JWT_SECRET_KEY,
+            { expiresIn: '15m' }
+        );
+
 
         res.status(200).json({
             message: 'Login successful',
             accessToken,
             refreshToken
         });
+
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: error });
+        res.status(500).json({ error: 'Internal server error' });
     }
 }
 
