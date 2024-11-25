@@ -84,7 +84,6 @@ async function tokenRefresh(req, res, next) {
                 process.env.JWT_SECRET_KEY,
                 { expiresIn: '15m' }
             );
-
             res.status(200).json({ accessToken: newAccessToken });
         });
     } catch (error) {

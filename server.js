@@ -1,18 +1,48 @@
-
 const dotenv = require('dotenv');
 dotenv.config();
 
 const express = require('express');
-const app = express();
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 const authController = require('./controllers/authController.js');
-
 const BASE_URL = process.env.BASE_URL;
 
+const app = express();
 app.use(express.json());
 
-app.get('/', (req, res) => {
+const options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Animula Auth API',
+            version: '1.0.0',
+            description: 'API documentation for Animula Auth',
+        },
+        servers: [
+            {
+                url: BASE_URL || 'http://localhost:3000',
+            },
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT',
+                },
+            },
+        },
+        security: [{ bearerAuth: [] }],
+    },
+    apis: ['./server.js'], // Swagger annotations location
+};
 
+const swaggerSpec = swaggerJsDoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Routes
+app.get('/', (req, res) => {
     res.send(`
     <html lang="en">
       <head>
@@ -34,17 +64,129 @@ app.get('/', (req, res) => {
   `);
 });
 
-app.post('/api/auth/register',authController.register);
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               full_name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Registration failed
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/api/auth/register', authController.register);
 
-app.post('/api/auth/login',authController.login);
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/api/auth/login', authController.login);
 
-app.post('/api/auth/logout',authController.logout);
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout a user
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/api/auth/logout', authController.logout);
 
-app.post('/api/auth/refresh',authController.tokenRefresh);
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh access token
+ *     tags:
+ *       - Auth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: New access token generated
+ *       401:
+ *         description: Missing refresh token
+ *       403:
+ *         description: Invalid refresh token
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/api/auth/refresh', authController.tokenRefresh);
 
-app.post('/api/user/profile',authController.getProfile);
+/**
+ * @swagger
+ * /api/user/profile:
+ *   get:
+ *     summary: Get user profile
+ *     tags:
+ *       - User
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved
+ *       401:
+ *         description: Access token required
+ *       403:
+ *         description: Invalid token
+ *       500:
+ *         description: Internal server error
+ */
+app.post('/api/user/profile', authController.getProfile);
 
-
-app.listen(3000,()=>{
-    console.log('Port 3000, TST 18222061 , Auth API Running ')
-})
+app.listen(3000, () => {
+    console.log('Port 3000, TST 18222061, Auth API Running');
+    console.log('Swagger Docs available at: http://localhost:3000/api-docs');
+});
